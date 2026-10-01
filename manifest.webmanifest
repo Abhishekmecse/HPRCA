@@ -1,0 +1,9 @@
+{
+  "name":"HPRCA Exam Simulator",
+  "short_name":"HPRCA Simulator",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f3f5f7",
+  "theme_color":"#087f7b",
+  "description":"Unofficial local Digi OMR practice simulator."
+}
