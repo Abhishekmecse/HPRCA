@@ -31,7 +31,7 @@ button,input,select{font:inherit}button{cursor:pointer}
 .answers-title{font-weight:900;color:#8b1740}.legend{display:flex;gap:9px;font-size:11px;align-items:center}.legend span{display:inline-flex;align-items:center;gap:4px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid #777;background:#fff}.dot.attempt{background:#555}.dot.review{background:#ffb13b}.submit{margin-left:auto;background:#8b1740;color:#fff;border:0;border-radius:7px;padding:8px 12px;font-weight:800}
 .palette{min-height:0;flex:1;overflow:auto;padding:8px 10px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;max-width:1000px;margin:auto}.qrow{display:flex;align-items:center;gap:5px}.qnum{width:34px;min-width:34px;height:34px;border:1px solid #c4a6b2;border-radius:7px;background:#fff;font-weight:800;position:relative}.qnum.review{background:#ffe0a3}.qnum.current{outline:2px solid var(--blue);outline-offset:1px}.qnum.attempted{background:#555;color:#fff;border-color:#555}.qnum.review.attempted{background:#d58c22;color:#fff}.qnum.review:after{content:"★";position:absolute;font-size:9px;right:2px;top:1px;color:#8b1740}
-.opts{display:flex;gap:5px}.bubble{width:34px;height:34px;border-radius:50%;border:1px solid #a79aa0;background:#fff;padding:0;font-weight:800;color:#222;position:relative;touch-action:manipulation}.bubble.selected{background:#777;color:#fff;border:2px solid #1769e0}.bubble.locked{background:#202020;color:#fff;border:2px solid #16824a}.bubble.locked:after{content:"✓";position:absolute;right:-3px;bottom:-4px;background:#16824a;color:#fff;border-radius:50%;font-size:10px;width:15px;height:15px;line-height:15px;pointer-events:none}.bubble{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.qnum{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.opts{display:flex;gap:5px}.bubble{width:34px;height:34px;border-radius:50%;border:1px solid #a79aa0;background:#fff;padding:0;font-weight:800;color:#222;position:relative;touch-action:manipulation}.bubble.selected{background:#9a9a9a;color:#fff}.bubble.locked{background:#202020;color:#fff;border-color:#111}.bubble.locked:after{content:"✓";position:absolute;right:-2px;bottom:-4px;background:#16824a;color:#fff;border-radius:50%;font-size:10px;width:15px;height:15px;line-height:15px}
 .start-screen{position:fixed;inset:0;background:#f3f5f7;z-index:30;display:grid;place-items:center;padding:18px;overflow:auto}.card{width:min(760px,100%);background:#fff;border-radius:16px;box-shadow:0 10px 35px #0002;padding:22px}.card h1{margin:0 0 6px;color:var(--teal)}.card p{color:var(--muted)}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-weight:700;font-size:13px}.field input,.field select{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff}.full{grid-column:1/-1}.filebox{border:2px dashed #b7c1cd;padding:14px;border-radius:10px;background:#f8fafc}.primary{background:var(--teal);color:#fff;border:0;border-radius:9px;padding:11px 16px;font-weight:800}.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 14px;font-weight:700}.small{font-size:12px;color:var(--muted)}
 .hidden{display:none!important}.result{position:fixed;inset:0;z-index:40;background:#f3f5f7;overflow:auto;padding:18px}.result-card{max-width:1000px;margin:auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 30px #0002}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:9px;padding:10px}.stat b{display:block;font-size:20px}.result-table{width:100%;border-collapse:collapse}.result-table th,.result-table td{border-bottom:1px solid var(--line);padding:7px;text-align:left}
 @media(max-width:700px){.brand{font-size:13px}.header{height:52px;padding:6px}.timer{min-width:78px;padding:6px 8px}.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr}.bubble,.qnum{width:32px;height:32px}.answers-head{font-size:12px}}
@@ -115,7 +115,7 @@ const state={
   current:1, pdf:null, pdfScale:1, pdfMode:"width", paperType:null, fileName:"", fileData:null,
   lastScroll:0, answerKey:null
 };
-let timerHandle=null, longPressTimer=null, pressTarget=null, suppressClickEl=null, pdfRenderToken=0;
+let timerHandle=null, longPressTimer=null, pressTarget=null, pdfRenderToken=0;
 
 if(window.pdfjsLib){
   pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -132,12 +132,8 @@ function loadSaved(){
 }
 function clearSaved(){localStorage.removeItem(KEY)}
 function fmtTime(ms){
-  // Exam timer always displays total minutes and seconds (e.g. 89:44), never HH:MM:SS.
-  ms=Math.max(0,ms);
-  const totalSeconds=Math.floor(ms/1000);
-  const totalMinutes=Math.floor(totalSeconds/60);
-  const seconds=totalSeconds%60;
-  return `${String(totalMinutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+  ms=Math.max(0,ms); const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+  return h?`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`;
 }
 function download(name,text,type="text/plain"){
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
@@ -226,33 +222,24 @@ function buildGrid(){
   refreshGrid();
 }
 function startLong(el,type,q,opt){
-  cancelLong();
-  pressTarget=el;
+  cancelLong();pressTarget=el;
   longPressTimer=setTimeout(()=>{
-    // Suppress the synthetic click that browsers fire after a completed long press.
-    // Without this, a lock/unlock gesture can accidentally select/deselect the answer,
-    // and a review gesture can immediately trigger normal question navigation.
-    suppressClickEl=el;
     if(type==="lock")toggleLock(q,opt);else toggleReview(q);
     pressTarget=null;
-    longPressTimer=null;
   },2000);
 }
-function cancelLong(){
-  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null}
-  pressTarget=null;
-}
+function cancelLong(){if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null}pressTarget=null}
 function selectAnswer(q,opt){
   if(state.locked[q])return;
   state.answers[q]=state.answers[q]===opt?null:opt;
   state.current=q;save();refreshGrid();
 }
 function toggleLock(q,opt){
-  // Only the currently selected answer can be locked or unlocked.
-  if(!state.answers[q] || state.answers[q]!==opt){
-    save();refreshGrid();return;
+  if(state.locked[q]){
+    if(state.answers[q]===opt)state.locked[q]=false;
+  }else if(state.answers[q]===opt){
+    state.locked[q]=true;
   }
-  state.locked[q]=!Boolean(state.locked[q]);
   save();refreshGrid();
 }
 function toggleReview(q){state.review[q]=!state.review[q];save();refreshGrid()}
@@ -261,13 +248,7 @@ function refreshGrid(){
     const q=+el.dataset.q;el.classList.toggle("attempted",!!state.answers[q]);el.classList.toggle("review",!!state.review[q]);el.classList.toggle("current",q===state.current);
   });
   document.querySelectorAll(".bubble").forEach(el=>{
-    const q=+el.dataset.q,opt=el.dataset.opt;
-    const selected=Boolean(state.answers[q]) && state.answers[q]===opt;
-    const locked=selected && Boolean(state.locked[q]);
-    el.classList.toggle("selected",selected);
-    el.classList.toggle("locked",locked);
-    el.setAttribute("aria-pressed",selected?"true":"false");
-    el.setAttribute("aria-label",`Question ${q}, option ${opt}${selected?(locked?", selected and locked":", selected"):""}`);
+    const q=+el.dataset.q,opt=el.dataset.opt;el.classList.toggle("selected",state.answers[q]===opt);el.classList.toggle("locked",state.locked[q]&&state.answers[q]===opt);
   });
 }
 function goQuestion(q){
@@ -339,7 +320,6 @@ $("downloadCsv").onclick=()=>download("response-sheet.csv",resultText("csv"),"te
 $("downloadJson").onclick=()=>download("response-sheet.json",resultText("json"),"application/json");
 $("newTest").onclick=()=>{clearSaved();location.reload()};
 $("paper").addEventListener("scroll",()=>{state.lastScroll=$("paper").scrollTop;updatePageInfo();save()});
-document.addEventListener("visibilitychange",()=>{if(document.hidden)cancelLong()});
 $("plus").onclick=()=>{state.pdfMode="manual";state.pdfScale=Math.min(4,state.pdfScale*1.15);renderPdf()};
 $("minus").onclick=()=>{state.pdfMode="manual";state.pdfScale=Math.max(.35,state.pdfScale/1.15);renderPdf()};
 $("fitWidth").onclick=()=>{state.pdfMode="width";renderPdf()};
@@ -348,7 +328,20 @@ $("paperFs").onclick=()=>{$("paper").requestFullscreen?.()};
 $("fsBtn").onclick=()=>document.documentElement.requestFullscreen?.();
 $("divider").addEventListener("pointerdown",e=>{e.preventDefault();$("divider").setPointerCapture(e.pointerId);const main=$(".main"),start=e.clientY,startPaper=$(".paper").getBoundingClientRect().height;const move=ev=>{const total=main.getBoundingClientRect().height;const h=Math.max(150,Math.min(total-220,startPaper+ev.clientY-start));$(".paper").style.flex="none";$(".paper").style.height=h+"px"};const up=()=>{$("divider").removeEventListener("pointermove",move);$("divider").removeEventListener("pointerup",up)};$("divider").addEventListener("pointermove",move);$("divider").addEventListener("pointerup",up)});
 showResume();
-if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+// Disable the app service worker and remove Cache Storage entries so the browser
+// fetches the latest GitHub Pages files.
+(async()=>{
+  try{
+    if("serviceWorker" in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg=>reg.unregister()));
+    }
+    if("caches" in window){
+      const names=await caches.keys();
+      await Promise.all(names.map(name=>caches.delete(name)));
+    }
+  }catch(err){ console.warn("Could not clear site caches automatically:",err); }
+})();
 })();
 </script>
 </body>
