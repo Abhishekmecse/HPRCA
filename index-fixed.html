@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#087f7b">
+<title>HPRCA Exam Simulator</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--teal:#087f7b;--teal2:#0b938e;--pink:#ffe5ef;--pink2:#fff4f8;--ink:#17202a;--muted:#667085;--line:#d9dee7;--blue:#1769e0;--green:#16824a;--orange:#e98b16;--danger:#c62828}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:#f3f5f7}
+button,input,select{font:inherit}button{cursor:pointer}
+#app{height:100dvh;display:flex;flex-direction:column}
+.header{height:58px;flex:none;background:var(--teal);color:white;display:flex;align-items:center;gap:10px;padding:8px 12px;box-shadow:0 2px 7px #0002;z-index:10}
+.brand{font-weight:800;letter-spacing:.2px;white-space:nowrap}.set{font-weight:700;margin-left:auto}
+.timer{background:#f5a623;color:#fff;border-radius:10px;padding:7px 12px;font-weight:800;min-width:90px;text-align:center}
+.header button{border:0;background:#ffffff22;color:#fff;border-radius:8px;padding:8px 10px}
+.main{min-height:0;flex:1;display:flex;flex-direction:column}
+.paper{min-height:0;flex:1;position:relative;background:#e9edf2;overflow:auto;overscroll-behavior:contain}
+.paper-toolbar{position:sticky;top:0;z-index:4;background:#ffffffee;backdrop-filter:blur(8px);display:flex;gap:6px;align-items:center;padding:6px;border-bottom:1px solid var(--line)}
+.paper-toolbar button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 9px}.page-info{margin-left:auto;font-size:13px;color:var(--muted)}
+#paperContent{padding:10px;min-height:100%}
+.pdf-page{display:block;margin:0 auto 10px;background:#fff;box-shadow:0 1px 5px #0002;max-width:none}
+.text-page,.csv-page{background:#fff;max-width:1100px;margin:0 auto 12px;padding:18px;box-shadow:0 1px 5px #0002;white-space:pre-wrap;overflow-wrap:anywhere}
+.csv-page{white-space:normal;overflow:auto}.csv-page table{border-collapse:collapse;width:100%}.csv-page td,.csv-page th{border:1px solid #ccd2da;padding:6px;text-align:left}
+.empty{height:100%;min-height:260px;display:grid;place-items:center;color:var(--muted);text-align:center;padding:30px}
+.divider{height:10px;flex:none;background:#c7cbd2;position:relative;touch-action:none;cursor:row-resize;z-index:8}
+.divider:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:6px;border-radius:9px;background:#1769e0}
+.answers{min-height:180px;flex:1;background:var(--pink);display:flex;flex-direction:column;overflow:hidden}
+.answers-head{padding:7px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e4bdcc;background:#ffd7e6;flex-wrap:wrap}
+.answers-title{font-weight:900;color:#8b1740}.legend{display:flex;gap:9px;font-size:11px;align-items:center}.legend span{display:inline-flex;align-items:center;gap:4px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid #777;background:#fff}.dot.attempt{background:#555}.dot.review{background:#ffb13b}.submit{margin-left:auto;background:#8b1740;color:#fff;border:0;border-radius:7px;padding:8px 12px;font-weight:800}
+.palette{min-height:0;flex:1;overflow:auto;padding:8px 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;max-width:1000px;margin:auto}.qrow{display:flex;align-items:center;gap:5px}.qnum{width:34px;min-width:34px;height:34px;border:1px solid #c4a6b2;border-radius:7px;background:#fff;font-weight:800;position:relative}.qnum.review{background:#ffe0a3}.qnum.current{outline:2px solid var(--blue);outline-offset:1px}.qnum.attempted{background:#555;color:#fff;border-color:#555}.qnum.review.attempted{background:#d58c22;color:#fff}.qnum.review:after{content:"★";position:absolute;font-size:9px;right:2px;top:1px;color:#8b1740}
+.opts{display:flex;gap:5px}.bubble{width:34px;height:34px;border-radius:50%;border:1px solid #a79aa0;background:#fff;padding:0;font-weight:800;color:#222;position:relative;touch-action:manipulation}.bubble.selected{background:#777;color:#fff;border:2px solid #1769e0}.bubble.locked{background:#202020;color:#fff;border:2px solid #16824a}.bubble.locked:after{content:"✓";position:absolute;right:-3px;bottom:-4px;background:#16824a;color:#fff;border-radius:50%;font-size:10px;width:15px;height:15px;line-height:15px;pointer-events:none}.bubble{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.qnum{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.start-screen{position:fixed;inset:0;background:#f3f5f7;z-index:30;display:grid;place-items:center;padding:18px;overflow:auto}.card{width:min(760px,100%);background:#fff;border-radius:16px;box-shadow:0 10px 35px #0002;padding:22px}.card h1{margin:0 0 6px;color:var(--teal)}.card p{color:var(--muted)}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-weight:700;font-size:13px}.field input,.field select{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff}.full{grid-column:1/-1}.filebox{border:2px dashed #b7c1cd;padding:14px;border-radius:10px;background:#f8fafc}.primary{background:var(--teal);color:#fff;border:0;border-radius:9px;padding:11px 16px;font-weight:800}.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 14px;font-weight:700}.small{font-size:12px;color:var(--muted)}
+.hidden{display:none!important}.result{position:fixed;inset:0;z-index:40;background:#f3f5f7;overflow:auto;padding:18px}.result-card{max-width:1000px;margin:auto;background:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 30px #0002}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:9px;padding:10px}.stat b{display:block;font-size:20px}.result-table{width:100%;border-collapse:collapse}.result-table th,.result-table td{border-bottom:1px solid var(--line);padding:7px;text-align:left}
+@media(max-width:700px){.brand{font-size:13px}.header{height:52px;padding:6px}.timer{min-width:78px;padding:6px 8px}.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr}.bubble,.qnum{width:32px;height:32px}.answers-head{font-size:12px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="header">
+  <div class="brand">HPRCA Exam Simulator</div>
+  <div class="set" id="setLabel">SET A</div>
+  <div class="timer" id="timer">90:00</div>
+  <button id="fsBtn" title="Fullscreen">⛶</button>
+</header>
+<main class="main">
+  <section class="paper" id="paper">
+    <div class="paper-toolbar">
+      <button id="minus">−</button><button id="plus">+</button>
+      <button id="fitWidth">Fit width</button><button id="fitPage">Fit page</button>
+      <button id="paperFs">Fullscreen PDF</button>
+      <span class="page-info" id="pageInfo">Page —</span>
+    </div>
+    <div id="paperContent"><div class="empty">Your local PDF/TXT/CSV will appear here.</div></div>
+  </section>
+  <div class="divider" id="divider" aria-label="Drag to resize"></div>
+  <section class="answers">
+    <div class="answers-head">
+      <div class="answers-title">ANSWERS</div>
+      <div class="legend"><span><i class="dot"></i>Not Answered</span><span><i class="dot attempt"></i>Attempted</span><span><i class="dot review"></i>Marked for Review</span></div>
+      <button class="submit" id="submitBtn">REVIEW &amp; SUBMIT</button>
+    </div>
+    <div class="palette"><div class="grid" id="grid"></div></div>
+  </section>
+</main>
+</div>
+
+<div class="start-screen" id="startScreen">
+  <div class="card">
+    <h1>HPRCA Exam Simulator</h1>
+    <p>Unofficial local practice simulator. The question paper stays in your browser; it is not uploaded to a server.</p>
+    <div id="resumeBox" class="filebox hidden"></div>
+    <div class="formgrid">
+      <div class="field full"><label>Question paper</label><input id="paperFile" type="file" accept=".pdf,.txt,.csv,application/pdf,text/plain,text/csv"></div>
+      <div class="field"><label>Exam name</label><input id="examName" value="HPRCA Mock Test"></div>
+      <div class="field"><label>Set</label><select id="set"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+      <div class="field"><label>Questions</label><input id="qCount" type="number" min="1" max="500" value="120"></div>
+      <div class="field"><label>Options</label><select id="optionCount"><option value="4">A–D (4)</option><option value="5">A–E (5)</option></select></div>
+      <div class="field"><label>Time (minutes)</label><input id="minutes" type="number" min="1" max="600" value="90"></div>
+      <div class="field"><label>Negative marking</label><input id="negative" type="number" min="0" step="0.01" value="0.25"></div>
+      <div class="field full"><label>Optional answer key</label><input id="answerKey" type="file" accept=".txt,.csv,.json"></div>
+      <div class="field full"><span class="small">Answer-key formats: JSON object/array, CSV like <b>1,B</b>, or TXT lines like <b>1=B</b>. You can also omit it; the response sheet will still work.</span></div>
+      <div class="field full" style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap">
+        <button class="primary" id="startBtn">START TEST</button>
+        <button class="secondary hidden" id="resumeBtn">RESUME EXISTING TEST</button>
+        <button class="secondary hidden" id="restartBtn">RESTART</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="result hidden" id="result">
+  <div class="result-card">
+    <h1>Response Sheet</h1>
+    <div id="resultMeta"></div>
+    <div class="summary" id="summary"></div>
+    <div id="scoreBox"></div>
+    <table class="result-table"><thead><tr><th>Q</th><th>Answer</th><th>Review</th><th>Locked</th></tr></thead><tbody id="resultRows"></tbody></table>
+    <p style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="primary" id="downloadTxt">TXT</button><button class="secondary" id="downloadMd">Markdown</button><button class="secondary" id="downloadCsv">CSV</button><button class="secondary" id="downloadJson">JSON</button><button class="secondary" id="newTest">NEW TEST</button>
+    </p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(() => {
+"use strict";
+const KEY="hprca_exam_sim_v1";
+const $=id=>document.getElementById(id);
+const state={
+  config:null, answers:[], locked:[], review:[], endAt:0, startAt:0, submittedAt:0,
+  current:1, pdf:null, pdfScale:1, pdfMode:"width", paperType:null, fileName:"", fileData:null,
+  lastScroll:0, answerKey:null
+};
+let timerHandle=null, longPressTimer=null, pressTarget=null, suppressClickEl=null, pdfRenderToken=0;
+
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+function save(){
+  const copy={...state};
+  delete copy.pdf;
+  delete copy.fileData;
+  try{localStorage.setItem(KEY,JSON.stringify(copy))}catch(e){}
+}
+function loadSaved(){
+  try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}
+}
+function clearSaved(){localStorage.removeItem(KEY)}
+function fmtTime(ms){
+  // Exam timer always displays total minutes and seconds (e.g. 89:44), never HH:MM:SS.
+  ms=Math.max(0,ms);
+  const totalSeconds=Math.floor(ms/1000);
+  const totalMinutes=Math.floor(totalSeconds/60);
+  const seconds=totalSeconds%60;
+  return `${String(totalMinutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+}
+function download(name,text,type="text/plain"){
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function parseCSV(text){
+  return text.split(/\r?\n/).filter(Boolean).map(line=>line.split(",").map(x=>x.trim().replace(/^"(.*)"$/,"$1")));
+}
+function parseAnswerKey(text,name){
+  const out={};
+  try{
+    const j=JSON.parse(text);
+    if(Array.isArray(j)){j.forEach((v,i)=>{if(typeof v==="string")out[i+1]=v.trim().toUpperCase()});}
+    else if(j&&typeof j==="object"){Object.entries(j).forEach(([k,v])=>{out[Number(k)]=String(v).trim().toUpperCase()})}
+    return out;
+  }catch(e){}
+  for(const line of text.split(/\r?\n/)){
+    const m=line.match(/^\s*(\d+)\s*[,;:=\s]\s*([A-E])\b/i);
+    if(m)out[Number(m[1])]=m[2].toUpperCase();
+  }
+  return out;
+}
+async function readFile(file){
+  if(!file)return null;
+  const ext=file.name.toLowerCase().split(".").pop();
+  if(ext==="pdf")return {type:"pdf",data:await file.arrayBuffer(),name:file.name};
+  return {type:ext==="csv"?"csv":"txt",data:await file.text(),name:file.name};
+}
+async function renderPaper(data){
+  state.paperType=data.type; state.fileName=data.name; state.fileData=data.data;
+  const host=$("paperContent"); host.innerHTML="";
+  if(data.type==="pdf"){
+    if(!window.pdfjsLib){host.innerHTML='<div class="empty">PDF engine could not load. Connect once to load PDF.js, then reload.</div>';return}
+    state.pdf=await pdfjsLib.getDocument({data:data.data}).promise;
+    await renderPdf();
+  }else if(data.type==="txt"){
+    const d=document.createElement("div");d.className="text-page";d.textContent=data.data;host.appendChild(d);
+  }else{
+    const d=document.createElement("div");d.className="csv-page";const rows=parseCSV(data.data);
+    const table=document.createElement("table");rows.forEach((r,i)=>{const tr=document.createElement("tr");r.forEach(c=>{const el=document.createElement(i===0?"th":"td");el.textContent=c;tr.appendChild(el)});table.appendChild(tr)});d.appendChild(table);host.appendChild(d);
+  }
+}
+async function renderPdf(){
+  if(!state.pdf)return;
+  const token=++pdfRenderToken, host=$("paperContent"), width=Math.max(300,$("paper").clientWidth-24);
+  host.innerHTML="";
+  let scale=state.pdfScale;
+  if(state.pdfMode==="width"){
+    const p=await state.pdf.getPage(1); scale=width/p.getViewport({scale:1}).width;
+  }
+  state.pdfScale=scale;
+  for(let n=1;n<=state.pdf.numPages;n++){
+    if(token!==pdfRenderToken)return;
+    const page=await state.pdf.getPage(n), vp=page.getViewport({scale});
+    const c=document.createElement("canvas");c.className="pdf-page";c.dataset.page=n;c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);host.appendChild(c);
+    await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  }
+  updatePageInfo(); $("paper").scrollTop=state.lastScroll||0;
+}
+function updatePageInfo(){
+  if(!state.pdf){$("pageInfo").textContent="";return}
+  const sc=$("paper").scrollTop, pages=[...document.querySelectorAll(".pdf-page")];
+  let p=1,best=Infinity;
+  pages.forEach(c=>{const d=Math.abs(c.offsetTop-sc-30);if(d<best){best=d;p=Number(c.dataset.page)}})
+  $("pageInfo").textContent=`Page ${p}/${state.pdf.numPages}`;
+}
+function buildGrid(){
+  const g=$("grid");g.innerHTML="";
+  const letters=state.config.options===5?["A","B","C","D","E"]:["A","B","C","D"];
+  for(let i=1;i<=state.config.questions;i++){
+    const row=document.createElement("div");row.className="qrow";
+    const q=document.createElement("button");q.className="qnum";q.textContent=i;q.dataset.q=i;
+    q.addEventListener("click",()=>goQuestion(i));
+    q.addEventListener("pointerdown",()=>startLong(q,"review",i));
+    q.addEventListener("pointerup",cancelLong);q.addEventListener("pointercancel",cancelLong);q.addEventListener("pointerleave",cancelLong);
+    row.appendChild(q);
+    const opts=document.createElement("div");opts.className="opts";
+    letters.forEach(letter=>{
+      const b=document.createElement("button");b.className="bubble";b.textContent=letter;b.dataset.q=i;b.dataset.opt=letter;
+      b.addEventListener("click",()=>selectAnswer(i,letter));
+      b.addEventListener("pointerdown",()=>startLong(b,"lock",i,letter));
+      b.addEventListener("pointerup",cancelLong);b.addEventListener("pointercancel",cancelLong);b.addEventListener("pointerleave",cancelLong);
+      opts.appendChild(b);
+    });
+    row.appendChild(opts);g.appendChild(row);
+  }
+  refreshGrid();
+}
+function startLong(el,type,q,opt){
+  cancelLong();
+  pressTarget=el;
+  longPressTimer=setTimeout(()=>{
+    // Suppress the synthetic click that browsers fire after a completed long press.
+    // Without this, a lock/unlock gesture can accidentally select/deselect the answer,
+    // and a review gesture can immediately trigger normal question navigation.
+    suppressClickEl=el;
+    if(type==="lock")toggleLock(q,opt);else toggleReview(q);
+    pressTarget=null;
+    longPressTimer=null;
+  },2000);
+}
+function cancelLong(){
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null}
+  pressTarget=null;
+}
+function selectAnswer(q,opt){
+  if(state.locked[q])return;
+  state.answers[q]=state.answers[q]===opt?null:opt;
+  state.current=q;save();refreshGrid();
+}
+function toggleLock(q,opt){
+  // Only the currently selected answer can be locked or unlocked.
+  if(!state.answers[q] || state.answers[q]!==opt){
+    save();refreshGrid();return;
+  }
+  state.locked[q]=!Boolean(state.locked[q]);
+  save();refreshGrid();
+}
+function toggleReview(q){state.review[q]=!state.review[q];save();refreshGrid()}
+function refreshGrid(){
+  document.querySelectorAll(".qnum").forEach(el=>{
+    const q=+el.dataset.q;el.classList.toggle("attempted",!!state.answers[q]);el.classList.toggle("review",!!state.review[q]);el.classList.toggle("current",q===state.current);
+  });
+  document.querySelectorAll(".bubble").forEach(el=>{
+    const q=+el.dataset.q,opt=el.dataset.opt;
+    const selected=Boolean(state.answers[q]) && state.answers[q]===opt;
+    const locked=selected && Boolean(state.locked[q]);
+    el.classList.toggle("selected",selected);
+    el.classList.toggle("locked",locked);
+    el.setAttribute("aria-pressed",selected?"true":"false");
+    el.setAttribute("aria-label",`Question ${q}, option ${opt}${selected?(locked?", selected and locked":", selected"):""}`);
+  });
+}
+function goQuestion(q){
+  state.current=q;refreshGrid();
+  const c=document.querySelector(`.pdf-page[data-page="${Math.min(q,state.pdf?state.pdf.numPages:1)}"]`);
+  if(c){$("paper").scrollTo({top:Math.max(0,c.offsetTop-20),behavior:"smooth"})}
+}
+function startTimer(){
+  clearInterval(timerHandle);
+  timerHandle=setInterval(()=>{
+    const left=state.endAt-Date.now();$("timer").textContent=fmtTime(left);
+    if(left<=0){clearInterval(timerHandle);finalSubmit(true)}
+  },250);
+}
+function configFromUI(){
+  return {name:$("examName").value.trim()||"HPRCA Mock Test",set:$("set").value,questions:Math.max(1,Math.min(500,+$("qCount").value||120)),options:+$("optionCount").value,minutes:Math.max(1,+$("minutes").value||90),negative:Math.max(0,+$("negative").value||0)};
+}
+async function startNew(){
+  const paper=await readFile($("paperFile").files[0]);
+  if(!paper){alert("Please choose a PDF, TXT or CSV question paper.");return}
+  const keyFile=$("answerKey").files[0];let key=null;if(keyFile)key=parseAnswerKey(await keyFile.text(),keyFile.name);
+  state.config=configFromUI();state.answers=[];state.locked=[];state.review=[];state.current=1;state.startAt=Date.now();state.endAt=state.startAt+state.config.minutes*60000;state.submittedAt=0;state.answerKey=key;state.lastScroll=0;
+  await renderPaper(paper);buildGrid();$("setLabel").textContent="SET "+state.config.set;$("startScreen").classList.add("hidden");startTimer();save();
+}
+async function resume(){
+  const saved=loadSaved();if(!saved)return;
+  Object.assign(state,saved);state.pdf=null;
+  const f=$("paperFile").files[0];
+  if(!f){alert("Select the same question paper file to resume.");return}
+  const paper=await readFile(f);await renderPaper(paper);buildGrid();$("setLabel").textContent="SET "+state.config.set;$("startScreen").classList.add("hidden");startTimer();save();
+}
+function showResume(){
+  const s=loadSaved();if(!s||s.submittedAt)return;
+  $("resumeBox").classList.remove("hidden");$("resumeBox").innerHTML=`Existing test found: <b>${escapeHtml(s.config?.name||"Mock Test")}</b>, ${s.config?.questions||0} questions, time remaining <b>${fmtTime((s.endAt||0)-Date.now())}</b>. Select the same paper file, then resume or restart.`;
+  $("resumeBtn").classList.remove("hidden");$("restartBtn").classList.remove("hidden");
+}
+function escapeHtml(x){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function finalSubmit(auto=false){
+  if(state.submittedAt)return;
+  if(!auto&&!confirm("Submit this test now? You will not be able to continue the current attempt."))return;
+  state.submittedAt=Date.now();clearInterval(timerHandle);save();showResult();
+}
+function showResult(){
+  $("result").classList.remove("hidden");
+  const total=state.config.questions, attempted=state.answers.filter(Boolean).length, rev=state.review.filter(Boolean).length, used=Math.min(state.submittedAt-state.startAt,state.config.minutes*60000);
+  $("resultMeta").innerHTML=`<p><b>${escapeHtml(state.config.name)}</b> · SET ${escapeHtml(state.config.set)} · ${total} questions · Submitted ${new Date(state.submittedAt).toLocaleString()} · Time used ${fmtTime(used)}</p>`;
+  $("summary").innerHTML=[["Attempted",attempted],["Unanswered",total-attempted],["Review",rev],["Time used",fmtTime(used)]].map(x=>`<div class="stat"><b>${x[1]}</b>${x[0]}</div>`).join("");
+  let scoreHtml="";
+  if(state.answerKey){
+    let correct=0,wrong=0;for(let i=1;i<=total;i++){if(!state.answers[i])continue;if(state.answers[i]===state.answerKey[i])correct++;else wrong++}
+    const score=correct-wrong*state.config.negative;
+    scoreHtml=`<p><b>Optional score:</b> ${score.toFixed(2)} / ${total} · Correct ${correct} · Wrong ${wrong} · Unattempted ${total-attempted} · Negative marking −${state.config.negative} each wrong.</p>`;
+  }else scoreHtml=`<p class="small">No answer key supplied, so score calculation is not applied.</p>`;
+  $("scoreBox").innerHTML=scoreHtml;
+  $("resultRows").innerHTML=Array.from({length:total},(_,k)=>{const i=k+1;return `<tr><td>${i}</td><td>${state.answers[i]||"—"}</td><td>${state.review[i]?"Yes":"No"}</td><td>${state.locked[i]?"Yes":"No"}</td></tr>`}).join("");
+}
+function resultText(format){
+  const total=state.config.questions, attempted=state.answers.filter(Boolean).length, rev=state.review.filter(Boolean).length;
+  if(format==="json")return JSON.stringify({exam:state.config,start:new Date(state.startAt).toISOString(),submitted:new Date(state.submittedAt).toISOString(),answers:state.answers,locked:state.locked,review:state.review,answerKey:state.answerKey||null},null,2);
+  if(format==="csv")return "Question,Answer,MarkedForReview,Locked\n"+Array.from({length:total},(_,k)=>{const i=k+1;return `${i},${state.answers[i]||""},${state.review[i]?"Yes":"No"},${state.locked[i]?"Yes":"No"}`}).join("\n");
+  if(format==="md")return `# ${state.config.name}\n\n- Set: ${state.config.set}\n- Questions: ${total}\n- Attempted: ${attempted}\n- Unanswered: ${total-attempted}\n- Review: ${rev}\n- Started: ${new Date(state.startAt).toLocaleString()}\n- Submitted: ${new Date(state.submittedAt).toLocaleString()}\n\n| Question | Answer | Review | Locked |\n|---:|:---:|:---:|:---:|\n`+Array.from({length:total},(_,k)=>{const i=k+1;return `| ${i} | ${state.answers[i]||"—"} | ${state.review[i]?"Yes":"No"} | ${state.locked[i]?"Yes":"No"} |`}).join("\n");
+  return `${state.config.name}\nSet: ${state.config.set}\nQuestions: ${total}\nAttempted: ${attempted}\nUnanswered: ${total-attempted}\nReview: ${rev}\nStarted: ${new Date(state.startAt).toLocaleString()}\nSubmitted: ${new Date(state.submittedAt).toLocaleString()}\n\n`+Array.from({length:total},(_,k)=>{const i=k+1;return `${i}. ${state.answers[i]||"Unanswered"}${state.review[i]?" [Review]":""}${state.locked[i]?" [Locked]":""}`}).join("\n");
+}
+$("startBtn").onclick=startNew;$("resumeBtn").onclick=resume;$("restartBtn").onclick=()=>{clearSaved();location.reload()};
+$("submitBtn").onclick=()=>finalSubmit(false);
+$("downloadTxt").onclick=()=>download("response-sheet.txt",resultText("txt"));
+$("downloadMd").onclick=()=>download("response-sheet.md",resultText("md"),"text/markdown");
+$("downloadCsv").onclick=()=>download("response-sheet.csv",resultText("csv"),"text/csv");
+$("downloadJson").onclick=()=>download("response-sheet.json",resultText("json"),"application/json");
+$("newTest").onclick=()=>{clearSaved();location.reload()};
+$("paper").addEventListener("scroll",()=>{state.lastScroll=$("paper").scrollTop;updatePageInfo();save()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)cancelLong()});
+$("plus").onclick=()=>{state.pdfMode="manual";state.pdfScale=Math.min(4,state.pdfScale*1.15);renderPdf()};
+$("minus").onclick=()=>{state.pdfMode="manual";state.pdfScale=Math.max(.35,state.pdfScale/1.15);renderPdf()};
+$("fitWidth").onclick=()=>{state.pdfMode="width";renderPdf()};
+$("fitPage").onclick=async()=>{if(!state.pdf)return;const p=await state.pdf.getPage(1),v=p.getViewport({scale:1});const w=$("paper").clientWidth-24,h=$("paper").clientHeight-80;state.pdfMode="manual";state.pdfScale=Math.min(w/v.width,h/v.height);renderPdf()};
+$("paperFs").onclick=()=>{$("paper").requestFullscreen?.()};
+$("fsBtn").onclick=()=>document.documentElement.requestFullscreen?.();
+$("divider").addEventListener("pointerdown",e=>{e.preventDefault();$("divider").setPointerCapture(e.pointerId);const main=$(".main"),start=e.clientY,startPaper=$(".paper").getBoundingClientRect().height;const move=ev=>{const total=main.getBoundingClientRect().height;const h=Math.max(150,Math.min(total-220,startPaper+ev.clientY-start));$(".paper").style.flex="none";$(".paper").style.height=h+"px"};const up=()=>{$("divider").removeEventListener("pointermove",move);$("divider").removeEventListener("pointerup",up)};$("divider").addEventListener("pointermove",move);$("divider").addEventListener("pointerup",up)});
+showResume();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>
